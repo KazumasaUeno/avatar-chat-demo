@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>仮アバター確認</title>
+<style>html,body{margin:0;height:100%;background:#eef1f5}canvas{display:block}</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+  "@pixiv/three-vrm":"https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.3.3/lib/three-vrm.module.min.js"
+}}
+</script>
+</head>
+<body>
+<script type="module">
+// 確認用: 待機（腕を下ろす・呼吸）、まばたき、口パク（aa/ih/ou/ee/oh を順に）
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xeef1f5);
+// 光（MToon は光を受けて影色に切り替わる）
+const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+sun.position.set(0.6, 1.6, 2.0);
+scene.add(sun);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd6dbe6, 1.2));
+const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 20);
+camera.position.set(0, 1.1, 2.4);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.9, 0);
+controls.update();
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+const loader = new GLTFLoader();
+loader.register(p => new VRMLoaderPlugin(p));
+const vrm = (await loader.loadAsync('./avatar-sample-a.vrm')).userData.vrm;
+VRMUtils.rotateVRM0(vrm); // VRM 0.x は向きが逆なので正面に向ける
+scene.add(vrm.scene);
+window.__avatar = { THREE, vrm, renderer, scene, camera, controls }; // 確認用（コンソールから表情や姿勢を固定して見る）
+
+const vowels = ['aa', 'ih', 'ou', 'ee', 'oh'];
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = clock.getDelta(), t = clock.elapsedTime;
+  const h = vrm.humanoid;
+  h.getNormalizedBoneNode('leftUpperArm').rotation.z = 1.2;
+  h.getNormalizedBoneNode('rightUpperArm').rotation.z = -1.2;
+  h.getNormalizedBoneNode('spine').rotation.x = Math.sin(t * 1.5) * 0.02;
+  h.getNormalizedBoneNode('head').rotation.y = Math.sin(t * 0.7) * 0.15;
+  const em = vrm.expressionManager;
+  em.setValue('blink', (t % 4) < 0.15 ? 1 : 0);
+  const cur = vowels[Math.floor(t * 4) % vowels.length];
+  for (const v of vowels) em.setValue(v, v === cur ? Math.abs(Math.sin(t * 12.5)) : 0);
+  vrm.update(dt);
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
