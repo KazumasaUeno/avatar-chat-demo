@@ -282,6 +282,14 @@ function applyBg(c) {
 }
 applyBg(settings.bg);
 bgs.addEventListener('click', e => { const b = e.target.closest('button[data-bg]'); if (b) { applyBg(b.dataset.bg); save(); } });
+// ---- 開いたらすぐ一言（表示はすぐ。ブラウザは操作前の読み上げを止めるので、まだ操作していなければ最初のクリック・キー入力で話す） ----
+const greeting = settings.lang === 'en' ? 'Hi! Talk to me anytime.' : 'こんにちは！なんでも話しかけてね。';
+add('ai', greeting); // 会話履歴（AI へ送る分）には入れない
+if (!navigator.userActivation || navigator.userActivation.hasBeenActive) speak(greeting);
+else {
+  const greetOnce = () => { removeEventListener('pointerdown', greetOnce, true); removeEventListener('keydown', greetOnce, true); if (!history.length) speak(greeting); };
+  addEventListener('pointerdown', greetOnce, true); addEventListener('keydown', greetOnce, true);
+}
 window.__chat = { get vrm() { return vrm; }, settings, loadModel }; // 確認用
 </script>
 </body>
