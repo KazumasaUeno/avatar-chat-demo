@@ -175,12 +175,17 @@ renderer.setAnimationLoop(() => {
 // ---- 音声（ブラウザ内蔵の読み上げ。無料・外部送信なし） ----
 // 選んだ言語の声だけを使う（声の設定が別の言語なら、その言語の最初の声）
 function langVoices() { return speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith(settings.lang)); }
+const VOICE_PREF = {
+  en: [/Google US English/, /Aria/, /Jenny/, /Zira/, /Samantha/, /Female/i],
+  ja: [/Nanami/, /Google/, /Haruka/, /Ayumi/, /Sayaka/, /Kyoko/],
+};
 function pickVoice() {
   const vs = langVoices();
   const chosen = settings.voice && vs.find(v => v.voiceURI === settings.voice);
   if (chosen) return chosen;
-  const pref = settings.lang === 'en' ? /Google US English|Aria|Jenny|en-US/ : /Nanami|Google/;
-  return vs.find(v => pref.test(v.name) || pref.test(v.lang)) || vs[0] || null;
+  // 自動のときは女性の声を名前の優先順で選ぶ（一覧の順で選ぶと Windows では男性の声 Mark / David になる）
+  for (const re of VOICE_PREF[settings.lang]) { const v = vs.find(v => re.test(v.name)); if (v) return v; }
+  return vs[0] || null;
 }
 function speak(text) {
   return new Promise(resolve => {
