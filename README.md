@@ -15,4 +15,4 @@
 ## クレジット
 
 アバター: 「Rinka」（作者: E129 JR East、VRoid Hub ライセンス: 再配布・商用可・クレジット不要）
-仮アバター: 自作（外部の素材は使っていません）
+アバター: 「AvatarSample_A」（作者: VRoid Project、VRoid Hub ライセンス: 再配布・商用可・クレジット不要）
