@@ -18,6 +18,25 @@ form{display:flex;gap:8px;margin-top:6px}
 input{flex:1;font-size:16px;padding:10px 12px;border:1px solid #c9d0db;border-radius:8px}
 button{font-size:16px;padding:10px 16px;border:0;border-radius:8px;background:var(--accent);color:#fff}
 button:disabled{opacity:.5}
+#gear{position:fixed;top:8px;right:8px;width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;background:var(--panel);color:var(--text);border:1px solid #d9dee7;border-radius:50%;z-index:20;cursor:pointer}
+#gear svg{width:22px;height:22px}
+#settings{position:fixed;top:60px;right:8px;width:min(320px,calc(100vw - 32px));max-height:calc(100vh - 248px);overflow-y:auto;background:var(--panel);border:1px solid #d9dee7;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.12);padding:12px 16px 16px;box-sizing:border-box;z-index:20;font-size:16px}
+#settings[hidden]{display:none}
+#settings .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+#settings .head strong{font-size:16px}
+#settings .close{width:44px;height:44px;padding:0;background:none;color:var(--text);font-size:22px}
+#settings label{display:block;margin-top:12px}
+#settings label>span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+#settings select,#settings input[type=range]{width:100%;font-size:16px;box-sizing:border-box}
+#settings select{padding:8px;border:1px solid #c9d0db;border-radius:8px;background:#fff;color:var(--text)}
+#settings input[type=file]{font-size:12px;border:0;padding:0;width:100%}
+#settings .bgs{display:flex;gap:8px;margin-top:4px}
+#settings .bgs button{width:44px;height:44px;padding:0;border:2px solid #c9d0db;border-radius:50%}
+#settings .bgs button[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+#status{font-size:12px;color:var(--muted);min-height:18px;margin-top:8px}
+#status.err{color:#b42318}
+#voiceNote{font-size:12px;color:#b42318;margin-top:4px}
+#voiceNote:empty{display:none}
 </style>
 <script type="importmap">
 {"imports":{
@@ -29,6 +48,30 @@ button:disabled{opacity:.5}
 </head>
 <body>
 <div id="stage"></div>
+<button id="gear" type="button" aria-label="設定" aria-expanded="false" aria-controls="settings">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+</button>
+<div id="settings" role="dialog" aria-label="設定" hidden>
+  <div class="head"><strong>設定</strong><button type="button" class="close" id="close" aria-label="閉じる">×</button></div>
+  <label><span>アバター</span><select id="model">
+    <option value="./rinka.vrm">Rinka</option>
+    <option value="./placeholder-avatar.vrm">仮アバター</option>
+  </select></label>
+  <label><span>自分の VRM を読み込む（この端末の中だけで使い、送信しません）</span><input type="file" id="file" accept=".vrm"></label>
+  <div id="status" role="status"></div>
+  <label><span>言語</span><select id="lang"><option value="ja">日本語</option><option value="en">English</option></select></label>
+  <label><span>声</span><select id="voice"><option value="">自動</option></select></label>
+  <div id="voiceNote" role="status"></div>
+  <label><span>話す速さ <output id="rateOut">1.05</output></span><input type="range" id="rate" min="0.7" max="1.5" step="0.05" value="1.05"></label>
+  <label><span>背景色</span></label>
+  <div class="bgs" id="bgs">
+    <button type="button" data-bg="#eef1f5" style="background:#eef1f5" aria-label="グレー"></button>
+    <button type="button" data-bg="#fdf1e4" style="background:#fdf1e4" aria-label="クリーム"></button>
+    <button type="button" data-bg="#e6f4ea" style="background:#e6f4ea" aria-label="ミント"></button>
+    <button type="button" data-bg="#fbe7ef" style="background:#fbe7ef" aria-label="ピンク"></button>
+    <button type="button" data-bg="#2a3040" style="background:#2a3040" aria-label="紺"></button>
+  </div>
+</div>
 <div id="panel">
   <div id="log"></div>
   <form id="f"><input id="q" placeholder="話しかける" autocomplete="off" required><button id="send">送信</button></form>
@@ -53,26 +96,73 @@ scene.add(new THREE.HemisphereLight(0xffffff, 0xd6dbe6, 1.2));
 const camera = new THREE.PerspectiveCamera(25, 1, 0.1, 20);
 camera.position.set(0, 1.4, 1.6);
 camera.lookAt(0, 1.3, 0);
+// モデルの大きさに合わせて、頭の上から胸の下までが入るようにカメラを置く（頭身が違っても顔が切れない）
+function frameCamera(v) {
+  v.scene.updateMatrixWorld(true);
+  const headY = v.humanoid.getNormalizedBoneNode('head').getWorldPosition(new THREE.Vector3()).y;
+  const top = new THREE.Box3().setFromObject(v.scene).max.y + 0.06;
+  const bottom = headY - (top - headY) * 1.6;
+  const half = (top - bottom) / 2, mid = (top + bottom) / 2;
+  const dist = half / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  camera.position.set(0, mid + 0.02, dist);
+  camera.lookAt(0, mid, 0);
+}
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
   renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize); resize();
 
+// ---- 設定（localStorage は使えなくても動く） ----
+const KEY = 'avatar-chat-settings';
+const settings = { model: './rinka.vrm', voice: '', rate: 1.05, bg: '#eef1f5', lang: 'ja' };
+try { Object.assign(settings, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch {}
+if (settings.lang !== 'en') settings.lang = 'ja';
+function save() { try { localStorage.setItem(KEY, JSON.stringify(settings)); } catch {} }
+
 const loader = new GLTFLoader();
 loader.register(p => new VRMLoaderPlugin(p));
-const vrm = (await loader.loadAsync('./avatar-sample-a.vrm')).userData.vrm;
-VRMUtils.rotateVRM0(vrm); // VRM 0.x は向きが逆なので正面に向ける
-scene.add(vrm.scene);
+const statusEl = document.getElementById('status');
+function setStatus(text, err) { statusEl.textContent = text; statusEl.className = err ? 'err' : ''; }
+let vrm = null, armSign = 1, loadSeq = 0;
+// 失敗したら前のモデルを残す。読み込み中に別のモデルを選んだら、後から選んだ方を使う
+async function loadModel(url, label) {
+  const seq = ++loadSeq;
+  setStatus(`${label} を読み込み中…`);
+  try {
+    const next = (await loader.loadAsync(url)).userData.vrm;
+    if (!next || !next.humanoid) throw new Error('VRM ではありません');
+    if (seq !== loadSeq) { VRMUtils.deepDispose(next.scene); return false; }
+    const isVRM0 = next.meta?.metaVersion === '0';
+    if (isVRM0) VRMUtils.rotateVRM0(next); // VRM 0.x は向きが逆なので正面に向ける
+    if (vrm) { scene.remove(vrm.scene); VRMUtils.deepDispose(vrm.scene); }
+    vrm = next; armSign = isVRM0 ? 1 : -1;
+    scene.add(vrm.scene); frameCamera(vrm);
+    setStatus('');
+    return true;
+  } catch (e) {
+    if (seq === loadSeq) setStatus(`読み込めませんでした（${e.message || e}）。前のアバターのままです。`, true);
+    return false;
+  }
+}
+const modelSel = document.getElementById('model');
+if (![...modelSel.options].some(o => o.value === settings.model)) settings.model = './rinka.vrm';
+modelSel.value = settings.model;
+if (!await loadModel(settings.model, modelSel.selectedOptions[0].text) && settings.model !== './rinka.vrm') {
+  settings.model = modelSel.value = './rinka.vrm'; await loadModel(settings.model, 'Rinka');
+}
 
 // ---- 話している間だけ口を動かす（音声から口形は取れないので、母音をランダムに切り替える） ----
 let speaking = false, vowel = 'aa', nextSwitch = 0;
 const vowels = ['aa', 'ih', 'ou', 'ee', 'oh'];
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
-  const dt = clock.getDelta(), t = clock.elapsedTime, h = vrm.humanoid, em = vrm.expressionManager;
-  h.getNormalizedBoneNode('leftUpperArm').rotation.z = 1.2;
-  h.getNormalizedBoneNode('rightUpperArm').rotation.z = -1.2;
+  const dt = clock.getDelta(), t = clock.elapsedTime;
+  if (!vrm) { renderer.render(scene, camera); return; }
+  const h = vrm.humanoid, em = vrm.expressionManager;
+  // 腕を下ろす（VRM 0.x を回転させた後と VRM 1.0 では向きが逆）
+  h.getNormalizedBoneNode('leftUpperArm').rotation.z = 1.2 * armSign;
+  h.getNormalizedBoneNode('rightUpperArm').rotation.z = -1.2 * armSign;
   h.getNormalizedBoneNode('spine').rotation.x = Math.sin(t * 1.5) * 0.02;
   h.getNormalizedBoneNode('head').rotation.z = speaking ? Math.sin(t * 3) * 0.04 : 0;
   em.setValue('blink', (t % 4) < 0.15 ? 1 : 0);
@@ -83,15 +173,22 @@ renderer.setAnimationLoop(() => {
 });
 
 // ---- 音声（ブラウザ内蔵の読み上げ。無料・外部送信なし） ----
+// 選んだ言語の声だけを使う（声の設定が別の言語なら、その言語の最初の声）
+function langVoices() { return speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith(settings.lang)); }
 function pickVoice() {
-  const vs = speechSynthesis.getVoices().filter(v => v.lang.startsWith('ja'));
-  return vs.find(v => /Nanami|Google/.test(v.name)) || vs[0] || null;
+  const vs = langVoices();
+  const chosen = settings.voice && vs.find(v => v.voiceURI === settings.voice);
+  if (chosen) return chosen;
+  const pref = settings.lang === 'en' ? /Google US English|Aria|Jenny|en-US/ : /Nanami|Google/;
+  return vs.find(v => pref.test(v.name) || pref.test(v.lang)) || vs[0] || null;
 }
 function speak(text) {
   return new Promise(resolve => {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP'; u.voice = pickVoice(); u.rate = 1.05;
+    const voice = pickVoice();
+    u.voice = voice; u.lang = settings.lang === 'en' ? 'en-US' : 'ja-JP'; u.rate = settings.rate;
+    window.__lastUtterance = u; // 確認用
     u.onstart = () => { speaking = true; };
     u.onend = u.onerror = () => { speaking = false; resolve(); };
     speechSynthesis.speak(u);
@@ -104,7 +201,10 @@ const history = [];
 // デモ用の決まった返事（AI にはつながっていない）
 function mockReply(text) {
   const head = Array.from(text).slice(0, 40).join('');
-  return new Promise(r => setTimeout(() => r(`（デモ）『${head}』ですね。このデモは AI につながっていないので、決まった返事をしています。`), 300));
+  const msg = settings.lang === 'en'
+    ? `(Demo) You said: “${head}”. This demo isn't connected to AI, so I reply with a fixed message.`
+    : `（デモ）『${head}』ですね。このデモは AI につながっていないので、決まった返事をしています。`;
+  return new Promise(r => setTimeout(() => r(msg), 300));
 }
 function add(cls, text) { const p = document.createElement('p'); p.className = cls; p.textContent = text; log.appendChild(p); log.scrollTop = log.scrollHeight; }
 form.addEventListener('submit', async e => {
@@ -121,6 +221,68 @@ form.addEventListener('submit', async e => {
     history.pop(); add('sys', '返答を取得できませんでした。もう一度送ってください。');
   } finally { send.disabled = false; q.focus(); }
 });
+
+// ---- 設定パネル ----
+const gear = document.getElementById('gear'), panelEl = document.getElementById('settings');
+function openPanel(open) { panelEl.hidden = !open; gear.setAttribute('aria-expanded', String(open)); }
+gear.addEventListener('click', () => openPanel(panelEl.hidden));
+document.getElementById('close').addEventListener('click', () => { openPanel(false); gear.focus(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panelEl.hidden) { openPanel(false); gear.focus(); } });
+document.addEventListener('pointerdown', e => { if (!panelEl.hidden && !panelEl.contains(e.target) && !gear.contains(e.target)) openPanel(false); });
+
+let blobUrl = null;
+modelSel.addEventListener('change', async () => {
+  const url = modelSel.value;
+  if (url === 'local') return;
+  if (await loadModel(url, modelSel.selectedOptions[0].text)) {
+    settings.model = url; save();
+    modelSel.querySelector('option[value=local]')?.remove();
+    if (blobUrl) { URL.revokeObjectURL(blobUrl); blobUrl = null; }
+  } else modelSel.value = blobUrl ? 'local' : settings.model;
+});
+document.getElementById('file').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  const url = URL.createObjectURL(f); // 端末の中で読むだけ。どこにも送らない
+  if (await loadModel(url, f.name)) {
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    blobUrl = url;
+    let opt = modelSel.querySelector('option[value=local]');
+    if (!opt) { opt = new Option('', 'local'); modelSel.add(opt); }
+    opt.text = `自分の VRM: ${f.name}`; modelSel.value = 'local';
+  } else URL.revokeObjectURL(url);
+  e.target.value = '';
+});
+
+const voiceSel = document.getElementById('voice'), voiceNote = document.getElementById('voiceNote'), langSel = document.getElementById('lang');
+function fillVoices() {
+  const vs = langVoices().sort((a, b) => a.name.localeCompare(b.name));
+  voiceSel.length = 1;
+  for (const v of vs) voiceSel.add(new Option(`${v.name}（${v.lang}）`, v.voiceURI));
+  voiceSel.value = vs.some(v => v.voiceURI === settings.voice) ? settings.voice : '';
+  // 声の一覧は読み込みが遅れることがあるので、一覧が空のうちは注意を出さない
+  voiceNote.textContent = speechSynthesis.getVoices().length && !vs.length ? 'この言語の声が見つかりません' : '';
+}
+langSel.value = settings.lang;
+fillVoices();
+speechSynthesis.addEventListener('voiceschanged', fillVoices);
+voiceSel.addEventListener('change', () => { settings.voice = voiceSel.value; save(); });
+langSel.addEventListener('change', () => { settings.lang = langSel.value === 'en' ? 'en' : 'ja'; save(); fillVoices(); });
+
+const rate = document.getElementById('rate'), rateOut = document.getElementById('rateOut');
+settings.rate = Math.min(1.5, Math.max(0.7, Number(settings.rate) || 1.05));
+rate.value = settings.rate;
+rateOut.textContent = settings.rate.toFixed(2);
+rate.addEventListener('input', () => { settings.rate = Number(rate.value); rateOut.textContent = settings.rate.toFixed(2); save(); });
+
+const bgs = document.getElementById('bgs');
+function applyBg(c) {
+  if (!/^#[0-9a-f]{6}$/i.test(c)) c = '#eef1f5';
+  settings.bg = c; scene.background = new THREE.Color(c);
+  for (const b of bgs.children) b.setAttribute('aria-pressed', String(b.dataset.bg === c));
+}
+applyBg(settings.bg);
+bgs.addEventListener('click', e => { const b = e.target.closest('button[data-bg]'); if (b) { applyBg(b.dataset.bg); save(); } });
+window.__chat = { get vrm() { return vrm; }, settings, loadModel }; // 確認用
 </script>
 </body>
 </html>

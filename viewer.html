@@ -44,7 +44,7 @@ addEventListener('resize', () => {
 
 const loader = new GLTFLoader();
 loader.register(p => new VRMLoaderPlugin(p));
-const vrm = (await loader.loadAsync('./avatar-sample-a.vrm')).userData.vrm;
+const vrm = (await loader.loadAsync('./rinka.vrm')).userData.vrm;
 VRMUtils.rotateVRM0(vrm); // VRM 0.x は向きが逆なので正面に向ける
 scene.add(vrm.scene);
 window.__avatar = { THREE, vrm, renderer, scene, camera, controls }; // 確認用（コンソールから表情や姿勢を固定して見る）
