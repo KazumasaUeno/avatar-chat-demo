@@ -214,6 +214,21 @@ function mockReply(text) {
     : `（デモ）『${head}』ですね。このデモは AI につながっていないので、決まった返事をしています。`;
   return new Promise(r => setTimeout(() => r(msg), 300));
 }
+// ローカル（node local-server.mjs）で開いたときだけ AI に返事させる。公開ページは決まった返事のまま
+let aiAvailable = ['localhost', '127.0.0.1'].includes(location.hostname);
+async function getReply(text) {
+  if (!aiAvailable) return mockReply(text);
+  const r = await fetch('api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ lang: settings.lang, messages: history }) });
+  // AI の中継が無い（別のサーバーで開いた）／キー未設定なら、以後は決まった返事にする
+  if ([404, 405, 501, 503].includes(r.status)) {
+    aiAvailable = false;
+    add('sys', settings.lang === 'en' ? 'AI is not set up, so fixed replies are used.' : 'AI が設定されていないため、決まった返事にします。');
+    return mockReply(text);
+  }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok || !data.reply) throw new Error(data.error || 'upstream');
+  return data.reply;
+}
 function add(cls, text) { const p = document.createElement('p'); p.className = cls; p.textContent = text; log.appendChild(p); log.scrollTop = log.scrollHeight; }
 form.addEventListener('submit', async e => {
   e.preventDefault();
@@ -221,7 +236,7 @@ form.addEventListener('submit', async e => {
   q.value = ''; send.disabled = true;
   add('me', text); history.push({ role: 'user', content: text });
   try {
-    const answer = await mockReply(text);
+    const answer = await getReply(text);
     history.push({ role: 'assistant', content: answer });
     add('ai', answer);
     await speak(answer);
