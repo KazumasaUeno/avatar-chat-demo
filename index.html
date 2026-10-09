@@ -73,7 +73,9 @@ button:disabled{opacity:.5}
   </div>
 </div>
 <div id="panel">
-  <div id="log"></div>
+  <div id="log"><p class="ai" id="greet">こんにちは！なんでも話しかけてね。</p></div>
+  <script>/* あいさつはアバターの読み込みを待たずに最初の表示で出す（英語設定なら英語に） */
+  try { if (JSON.parse(localStorage.getItem('avatar-chat-settings') || '{}').lang === 'en') document.getElementById('greet').textContent = 'Hi! Talk to me anytime.'; } catch {}</script>
   <form id="f"><input id="q" placeholder="話しかける" autocomplete="off" required><button id="send">送信</button></form>
 </div>
 <script type="module">
@@ -148,9 +150,10 @@ async function loadModel(url, label) {
 const modelSel = document.getElementById('model');
 if (![...modelSel.options].some(o => o.value === settings.model)) settings.model = './rinka.vrm';
 modelSel.value = settings.model;
-if (!await loadModel(settings.model, modelSel.selectedOptions[0].text) && settings.model !== './rinka.vrm') {
-  settings.model = modelSel.value = './rinka.vrm'; await loadModel(settings.model, 'Rinka');
-}
+// 読み込みを待たずに先へ進む（あいさつ・入力欄をすぐ使えるようにする。アバターは読み込めた時点で出る）
+loadModel(settings.model, modelSel.selectedOptions[0].text).then(ok => {
+  if (!ok && loadSeq === 1 && settings.model !== './rinka.vrm') { settings.model = modelSel.value = './rinka.vrm'; loadModel(settings.model, 'Rinka'); }
+});
 
 // ---- 話している間だけ口を動かす（音声から口形は取れないので、母音をランダムに切り替える） ----
 let speaking = false, vowel = 'aa', nextSwitch = 0;
@@ -288,8 +291,7 @@ function applyBg(c) {
 applyBg(settings.bg);
 bgs.addEventListener('click', e => { const b = e.target.closest('button[data-bg]'); if (b) { applyBg(b.dataset.bg); save(); } });
 // ---- 開いたらすぐ一言（表示はすぐ。ブラウザは操作前の読み上げを止めるので、まだ操作していなければ最初のクリック・キー入力で話す） ----
-const greeting = settings.lang === 'en' ? 'Hi! Talk to me anytime.' : 'こんにちは！なんでも話しかけてね。';
-add('ai', greeting); // 会話履歴（AI へ送る分）には入れない
+const greeting = document.getElementById('greet').textContent; // 表示は HTML 側で済んでいる。会話履歴（AI へ送る分）には入れない
 if (!navigator.userActivation || navigator.userActivation.hasBeenActive) speak(greeting);
 else {
   const greetOnce = () => { removeEventListener('pointerdown', greetOnce, true); removeEventListener('keydown', greetOnce, true); if (!history.length) speak(greeting); };
